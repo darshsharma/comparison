@@ -362,7 +362,7 @@ def get_error_metric(y, y_hat, metric_type='accuracy', eps=0, list_not_num=[], l
         #         y_hat_new += y_hat[i]
         # y_hat = float(y_hat_new)
         # y = float(y)
-        print(f"Skipping y_hat={y_hat}")
+        #print(f"Skipping y_hat={y_hat}")
         error = np.nan
 
     elif metric_type == 'accuracy':
@@ -374,7 +374,7 @@ def get_error_metric(y, y_hat, metric_type='accuracy', eps=0, list_not_num=[], l
     elif metric_type == 'mse':
         error = (y - y_hat)**2
         if error > 10:
-            print(f"Skipping y_hat={y_hat}")
+            #print(f"Skipping y_hat={y_hat}")
             list_outlier_num.append(copy.deepcopy(y_hat))
             error = np.nan
 
@@ -384,7 +384,7 @@ def get_error_metric(y, y_hat, metric_type='accuracy', eps=0, list_not_num=[], l
         else:
             error = ((y - y_hat) / y)**2
         if error > 10e4:
-            print(f"Skipping y_hat={y_hat}")
+            #print(f"Skipping y_hat={y_hat}")
             list_outlier_num.append(copy.deepcopy(y_hat))
             error = np.nan
 
