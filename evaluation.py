@@ -308,7 +308,7 @@ def evaluate_addition_batch(config, model, ctx, encode, decode, verbose=False, n
         add_space=add_space, operator=operator, verbose_correct=verbose_correct, analyze=analyze, mode=mode
     )
 
-def evaluate_multiple_files(config, model, ctx, encode, decode, test_file, iter_num, result_dir,
+def evaluate_multiple_files(config, model, ctx, encode, decode, test_files, iter_num, result_dir,
                           verbose=False, num_digit=3, zero_pad=False,
                           data_type='binary', operator='+', data_format='plain', add_space=False, analyze=False, mode: str = "compute_gold"):
     """
@@ -320,70 +320,60 @@ def evaluate_multiple_files(config, model, ctx, encode, decode, test_file, iter_
     Returns:
         dict: Dictionary containing accuracies for each test file
     """
-    
-    # Get test file name without path and extension
-    test_name = os.path.splitext(os.path.basename(test_file))[0]
-    
-    # Set the current test file as start
-    config['start'] = f"FILE:{test_file}"
-    
-    # Run evaluation
-    accuracy, metrics, correct, incorrect = evaluate_addition_batch(
-        config, model, ctx, encode=encode, decode=decode,
-        verbose=verbose, num_digit=num_digit, zero_pad=zero_pad,
-        data_type=data_type, operator=operator,
-        data_format=data_format, analyze=analyze, mode=mode
-    )
-    
-    # Path for this test file's results
-    results_file = os.path.join(result_dir, f'{test_name}_results.csv')
-    
-    # Combine correct and incorrect examples and sort by operands to maintain consistent order
-    all_examples = correct + incorrect
-    all_examples.sort(key=lambda x: x[0])  # Sort by operands
-    
-    # Create new DataFrame with operands and actual results
-    new_df = pd.DataFrame({
+    result = {}
+    for test_file in test_files:
+        test_name = os.path.splitext(os.path.basename(test_file))[0]
+        config['start'] = f"FILE:{test_file}"
+         # Run evaluation
+        accuracy, metrics, correct, incorrect = evaluate_addition_batch(
+            config, model, ctx, encode=encode, decode=decode,
+            verbose=verbose, num_digit=num_digit, zero_pad=zero_pad,
+            data_type=data_type, operator=operator,
+            data_format=data_format, analyze=analyze, mode=mode
+        )
+        result[test_name] = accuracy
+        results_file = os.path.join(result_dir, f'{test_name}_results.csv')
+         
+        # Combine correct and incorrect examples and sort by operands to maintain consistent order
+        all_examples = correct + incorrect
+        all_examples.sort(key=lambda x: x[0])  # Sort by operands
+        new_df = pd.DataFrame({
         'operands': [ex[0] for ex in all_examples],
         'actual': [ex[1] for ex in all_examples],
         f'pred_iter_{iter_num}': [ex[3] for ex in all_examples]
-    })
-    
-    # Read existing results if file exists and merge
-    if os.path.exists(results_file):
-        old_df = pd.read_csv(results_file)
-        # # Merge based on operands, keeping all predictions
-        # if 'operands' in old_df.columns:
-        #     merged_df = pd.merge(old_df, new_df, on=['operands', 'actual'], how='outer')
-        # else:
-        #     merged_df = new_df
-        # ── Normalize keys so they truly match ──
-        for df in (old_df, new_df):
-            # strip whitespace from the operands strings
-            df['operands'] = df['operands'].str.strip()
-            df['actual']   = df['actual'].str.strip()
+        })
 
-        merged_df = pd.merge(
-            old_df, new_df,
-            on=['operands', 'actual'],
-            how='outer'
-        )
-    else:
-        merged_df = new_df
-    
-    # Save results
-    merged_df.to_csv(results_file, index=False)
-    
-    # Save accuracy separately in a summary file
-    accuracy_file = os.path.join(result_dir, f'{test_name}_accuracy.csv')
-    if os.path.exists(accuracy_file):
-        acc_df = pd.read_csv(accuracy_file)
-    else:
-        acc_df = pd.DataFrame(columns=['iteration', 'accuracy'])
-    
-    # Add new accuracy
-    new_row = pd.DataFrame({'iteration': [iter_num], 'accuracy': [accuracy]})
-    acc_df = pd.concat([acc_df, new_row], ignore_index=True)
-    acc_df.to_csv(accuracy_file, index=False)
-    
-    return test_name, accuracy, metrics, correct, incorrect
+        if os.path.exists(results_file):
+            old_df = pd.read_csv(results_file)
+            # # Merge based on operands, keeping all predictions
+            # if 'operands' in old_df.columns:
+            #     merged_df = pd.merge(old_df, new_df, on=['operands', 'actual'], how='outer')
+            # else:
+            #     merged_df = new_df
+            # ── Normalize keys so they truly match ──
+            for df in (old_df, new_df):
+                # strip whitespace from the operands strings
+                df['operands'] = df['operands'].str.strip()
+                df['actual']   = df['actual'].str.strip()
+
+            merged_df = pd.merge(
+                old_df, new_df,
+                on=['operands', 'actual'],
+                how='outer'
+            )
+        else:
+            merged_df = new_df
+        merged_df.to_csv(results_file, index=False)
+        accuracy_file = os.path.join(result_dir, f'{test_name}_accuracy.csv')
+
+        if os.path.exists(accuracy_file):
+            acc_df = pd.read_csv(accuracy_file)
+        else:
+            acc_df = pd.DataFrame(columns=['iteration', 'accuracy'])
+        
+        # Add new accuracy
+        new_row = pd.DataFrame({'iteration': [iter_num], 'accuracy': [accuracy]})
+        acc_df = pd.concat([acc_df, new_row], ignore_index=True)
+        acc_df.to_csv(accuracy_file, index=False)
+
+    return results

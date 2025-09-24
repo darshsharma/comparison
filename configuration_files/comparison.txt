@@ -68,24 +68,24 @@ train_data_path = '/content/drive/MyDrive/comparison/data/train.txt'
 
 # to edit: whether do evaluation on training data to see if the model is simply memorizing
 eval_addition_train = True
-train_data_test_path = "/content/drive/MyDrive/comparison/data/train.txt"
+train_data_test_path = "/content/drive/MyDrive/comparison/data/train_tests.txt"
 
 # to edit: validation data
 val_data_path = '/content/drive/MyDrive/comparison/data/val.txt'
 
 # to edit: test data; start is just the test file. It can be either without gold (thus gold by computing) or with gold (thus gold by reading)
-test_file_path = '/content/drive/MyDrive/comparison/data/test.txt'
+test_file_path = '/content/drive/MyDrive/comparison/data/test/test.txt'
 
 # to edit: "compute_gold" or "read_gold_as_str"; read or compute groundtruth in evaluation data
 mode = "read_gold_as_str"
 
 # to edit: whether to do more frequenly evaluations in early stages
 early_eval_interval1 = 25
-early_eval_border1 = 1000
+early_eval_border1 = 100
 
-more_early_eval2 = False
-early_eval_interval2 = 5
-early_eval_border2 = 750
+more_early_eval2 = True
+early_eval_interval2 = 100
+early_eval_border2 = 1000
 
 # to edit: whether do mutual information measurement between diffrent pairs of digits (include input-output and output-output)
 mi_measurement = False
@@ -98,3 +98,6 @@ early_mi_measure_interval = 5000
 final_mi_measure_interval = 5000
 
 more_early_eval1=True
+
+eval_additional_test = True
+test_dir = '/content/drive/MyDrive/comparison/data/test'

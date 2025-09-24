@@ -124,7 +124,9 @@ val_data_path2 = 'val_addition.bin'
 eval_text = False # if True get perplexity using eval_text_data_path
 eval_text_data_path = None # directory to text data (.bin file) - ex. 'data/shakespeare_add_ar_mixed/val_text.bin'
 eval_addition = False # if True compute test accuracy of "a+b="
+eval_additional_test = False 
 test_file_path = None
+test_dir = None
 eval_other = False # use this to evaluate other operations (ex. train on operator '-' but evaluate on other_operator '+')
 other_operator = '+'
 eval_addition_train = False
@@ -607,24 +609,20 @@ while iter_num < max_iters:
         # Regular test evaluation
         test_accuracy = None
         if eval_addition:
-            test_name, test_accuracy, _ , correct, incorrect = evaluate_multiple_files(
-                config, model, ctx,
+            config['start'] = f"FILE:{test_file_path}"
+            test_accuracy, _, correct, incorrect = evaluate_addition_batch(
+                config, model, ctx, 
                 encode=lambda x: encode_addition(x, meta),
-                decode=lambda x: decode_addition(x, meta),
-                test_file=test_file_path,
-                iter_num=iter_num,
-                result_dir=result_dir,
-                verbose=False,
-                num_digit=num_digit,
+                decode=lambda x: decode_addition(x, meta), 
+                verbose=False, 
+                num_digit=num_digit, 
                 zero_pad=zero_pad,
-                data_type=data_type,
-                operator=operator,
+                data_type=data_type, 
+                operator=operator, 
                 data_format=data_format,
-                analyze=True,
                 mode=mode
             )
 
-            # Log results
             print("\nTest Results:")
             print(f"{test_name}: {test_accuracy:.2f}%")
 
@@ -632,7 +630,8 @@ while iter_num < max_iters:
             
             # Add test accuracy to wandb_dict
             wandb_dict["test/accuracy"] = test_accuracy
-            
+
+
             if test_accuracy > best_accuracy and iter_num % 5 * eval_interval == 0:
                 best_accuracy = test_accuracy
                 checkpoint = {
@@ -646,6 +645,13 @@ while iter_num < max_iters:
                     'meta': meta,
                 }
                 torch.save(checkpoint, os.path.join(out_dir, f'ckpt_iter_{iter_num}_acc.pt'))
+            
+            test_name, test_accuracy, _ , correct, incorrect = 
+
+            # Log results
+            
+            
+            
         
         # Training data evaluation
         train_accuracy = None
@@ -667,6 +673,38 @@ while iter_num < max_iters:
             # Add train accuracy to wandb_dict
             wandb_dict["train/accuracy"] = train_accuracy
         
+        if eval_additional_test and test_dir:
+            test_files =  []
+            for file in os.listdir(test_dir):
+                if os.path.isfile(os.path.join(test_dir, file)):
+                    test_files.append(os.path.join(test_dir, file))
+            if not test_files:
+                print(f"No test files found in {test_dir}")
+            else:
+                test_results = evaluate_multiple_files(
+                config, model, ctx,
+                encode=lambda x: encode_addition(x, meta),
+                decode=lambda x: decode_addition(x, meta),
+                test_file=test_files,
+                iter_num=iter_num,
+                result_dir=result_dir,
+                verbose=False,
+                num_digit=num_digit,
+                zero_pad=zero_pad,
+                data_type=data_type,
+                operator=operator,
+                data_format=data_format,
+                analyze=True,
+                mode=mode
+            )
+
+            print("\nTest Results:")
+            for test_name, accuracy in test_results.items():
+                print(f"{test_name}: {accuracy:.2f}%")
+                # Add each test file accuracy to wandb_dict
+                wandb_dict[f"test/accuracy_{test_name}"] = accuracy
+                result_dict[f'test_acc_{test_name}'].append(accuracy)
+            print()
         # Update and save basic metrics
         result_dict['iter'].append(iter_num)
         result_dict['train_loss'].append(losses['train'].item())
@@ -751,27 +789,34 @@ if eval_addition_train:
         mode=mode
     )
     
-    
-test_name, accuracy, metrics, correct, incorrect = evaluate_multiple_files(
-    config, model, ctx,
-    encode=lambda x: encode_addition(x, meta),
-    decode=lambda x: decode_addition(x, meta),
-    test_file=test_file_path,
-    iter_num='final',
-    result_dir=result_dir,
-    verbose=False,
-    num_digit=num_digit,
-    zero_pad=zero_pad,
-    data_type=data_type,
-    operator=operator,
-    data_format=data_format,
-    analyze=True,
-    mode=mode
-)
-
-print("\nFinal Test Results:")
-print(f"{test_name}: {accuracy:.2f}%")
-print()
+if eval_additional_test and test_dir:
+    test_files =  []
+    for file in os.listdir(test_dir):
+        if os.path.isfile(os.path.join(test_dir, file)):
+            test_files.append(os.path.join(test_dir, file))
+    if not test_files:
+        print(f"No test files found in {test_dir}")
+    else:
+        final_results = evaluate_multiple_files(
+            config, model, ctx,
+            encode=lambda x: encode_addition(x, meta),
+            decode=lambda x: decode_addition(x, meta),
+            test_file=test_files,
+            iter_num='final',
+            result_dir=result_dir,
+            verbose=False,
+            num_digit=num_digit,
+            zero_pad=zero_pad,
+            data_type=data_type,
+            operator=operator,
+            data_format=data_format,
+            analyze=True,
+            mode=mode
+        )
+        print("\nFinal Test Results:")
+        for test_name, accuracy in final_results.items():
+            print(f"{test_name}: {accuracy:.2f}%")
+        print()
 
 
 # Final wandb logging
@@ -784,7 +829,9 @@ if wandb_log:
         "test/accuracy": test_accuracy if eval_addition else None,
         "train/accuracy": train_accuracy if eval_addition_train else None,
     }
-    final_dict[f"final_test/accuracy"] = accuracy
+    if eval_additional_test and test_dir:
+        for test_name, accuracy in final_results.items():
+            final_dict[f"test/accuracy_{test_name}"] = accuracy
     wandb.log(final_dict)
 
 # Save final DataFrame
