@@ -425,7 +425,11 @@ result_dict = {
 }
 
 # Initialize test accuracy keys for all test files
-result_dict[f'test_acc'] = []
+if eval_additional_test and test_dir:
+    test_files =  [f for f in os.listdir(test_dir) if os.path.isfile(os.path.join(test_dir, f))]
+    for test_file in test_files:
+        test_name = os.path.splitext(os.path.basename(test_file))[0]
+        result_dict[f'test_acc_{test_name}'] = []
 
 result_dir = get_results_dir(config)
 config['result_dir'] = result_dir
