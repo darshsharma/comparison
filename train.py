@@ -645,13 +645,6 @@ while iter_num < max_iters:
                     'meta': meta,
                 }
                 torch.save(checkpoint, os.path.join(out_dir, f'ckpt_iter_{iter_num}_acc.pt'))
-            
-            test_name, test_accuracy, _ , correct, incorrect = 
-
-            # Log results
-            
-            
-            
         
         # Training data evaluation
         train_accuracy = None
