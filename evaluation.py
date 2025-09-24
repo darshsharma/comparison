@@ -376,4 +376,4 @@ def evaluate_multiple_files(config, model, ctx, encode, decode, test_files, iter
         acc_df = pd.concat([acc_df, new_row], ignore_index=True)
         acc_df.to_csv(accuracy_file, index=False)
 
-    return results
+    return result

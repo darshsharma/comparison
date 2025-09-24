@@ -624,7 +624,7 @@ while iter_num < max_iters:
             )
 
             print("\nTest Results:")
-            print(f"{test_name}: {test_accuracy:.2f}%")
+            print(f"Test file accuracy: {test_accuracy:.2f}%")
 
             print()
             
@@ -678,7 +678,7 @@ while iter_num < max_iters:
                 config, model, ctx,
                 encode=lambda x: encode_addition(x, meta),
                 decode=lambda x: decode_addition(x, meta),
-                test_file=test_files,
+                test_files=test_files,
                 iter_num=iter_num,
                 result_dir=result_dir,
                 verbose=False,
@@ -794,7 +794,7 @@ if eval_additional_test and test_dir:
             config, model, ctx,
             encode=lambda x: encode_addition(x, meta),
             decode=lambda x: decode_addition(x, meta),
-            test_file=test_files,
+            test_files=test_files,
             iter_num='final',
             result_dir=result_dir,
             verbose=False,
