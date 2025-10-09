@@ -355,12 +355,9 @@ def evaluate_multiple_files(config, model, ctx, encode, decode, test_files, iter
                 # strip whitespace from the operands strings
                 df['operands'] = df['operands'].str.strip()
                 df['actual']   = df['actual'].str.strip()
+                df.drop_duplicates(subset=['operands', 'actual'], inplace=True)
 
-            merged_df = pd.merge(
-                old_df, new_df,
-                on=['operands', 'actual'],
-                how='outer'
-            )
+            merged_df = pd.merge(old_df, new_df, on=['operands', 'actual'], how='outer')
         else:
             merged_df = new_df
         merged_df.to_csv(results_file, index=False)
