@@ -1,5 +1,5 @@
 # to edit: do an evaluation every {eval_interval} iterations
-eval_interval = 1000
+eval_interval = 5000
 eval_iters = 1
 always_save_checkpoint = True
 
@@ -50,8 +50,8 @@ zero_pad = False
 learning_rate = 1e-3
 
 # to edit: the number of training iterations
-max_iters = 5000
-lr_decay_iters = 5000 # make equal to max_iters usually (300000)
+max_iters = 100000
+lr_decay_iters = 100000 # make equal to max_iters usually (300000)
 
 beta1 = 0.9
 beta2 = 0.98
@@ -74,18 +74,18 @@ train_data_test_path = "/content/drive/MyDrive/comparison/data/train_tests.txt"
 val_data_path = '/content/drive/MyDrive/comparison/data/val.txt'
 
 # to edit: test data; start is just the test file. It can be either without gold (thus gold by computing) or with gold (thus gold by reading)
-test_file_path = '/content/drive/MyDrive/comparison/data/test/test.txt'
+test_file_path = '/content/drive/MyDrive/comparison/data/test/test_balanced_sampling.txt'
 
 # to edit: "compute_gold" or "read_gold_as_str"; read or compute groundtruth in evaluation data
 mode = "read_gold_as_str"
 
 # to edit: whether to do more frequenly evaluations in early stages
-early_eval_interval1 = 25
-early_eval_border1 = 100
+early_eval_interval1 = 200
+early_eval_border1 = 2000
 
 more_early_eval2 = True
-early_eval_interval2 = 100
-early_eval_border2 = 1000
+early_eval_interval2 = 1000
+early_eval_border2 = 20000
 
 # to edit: whether do mutual information measurement between diffrent pairs of digits (include input-output and output-output)
 mi_measurement = False
