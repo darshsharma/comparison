@@ -195,6 +195,7 @@ def evaluate_addition_precomputed(config, model, ctx, decode, batch_list, total,
                 for i, outcome in enumerate(outcome_list):
                     _, operands, result = batch[i]
                     
+                    
                     if mode == "compute_gold":
                         c_hat = outcome.split('#')[1].split('$')[0].strip()
 
@@ -337,10 +338,16 @@ def evaluate_multiple_files(config, model, ctx, encode, decode, test_files, iter
         # Combine correct and incorrect examples and sort by operands to maintain consistent order
         all_examples = correct + incorrect
         all_examples.sort(key=lambda x: x[0])  # Sort by operands
+        # Escape '=' to prevent CSV formula interpretation
+        def escape_equals(val):
+            if val == '=':
+                return "'="
+            return val
+
         new_df = pd.DataFrame({
         'operands': [ex[0] for ex in all_examples],
-        'actual': [ex[1] for ex in all_examples],
-        f'pred_iter_{iter_num}': [ex[3] for ex in all_examples]
+        'actual': [escape_equals(ex[1]) for ex in all_examples],
+        f'pred_iter_{iter_num}': [escape_equals(ex[3]) for ex in all_examples]
         })
 
         if os.path.exists(results_file):
